@@ -1,0 +1,14 @@
+notes
+input_data
+
+
+*.db
+
+*.build
+*.onefile-build
+*.dist
+*.exe
+
+*.pyc
+backups
+.pytest_cache
