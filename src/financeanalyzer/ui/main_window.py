@@ -28,6 +28,7 @@ from .tabs.all_entries_tab import AllEntriesTab
 from .dialogs.import_dialog import ImportDialog
 from .dialogs.category_dialog import CategoryManagerDialog
 from .dialogs.rule_dialog import RuleManagerDialog
+from .dialogs.entry_dialog import EntryDialog
 
 
 class MainWindow(QMainWindow):
@@ -92,6 +93,13 @@ class MainWindow(QMainWindow):
         import_action.triggered.connect(self._import_csv)
         file_menu.addAction(import_action)
         
+        manual_action = QAction("➕ Add Manual Entry...", self)
+        manual_action.setShortcut("Ctrl+N")
+        manual_action.triggered.connect(self._add_manual_entry)
+        file_menu.addAction(manual_action)
+        
+        file_menu.addSeparator()
+        
         export_action = QAction("📤 Export to Excel...", self)
         export_action.setShortcut("Ctrl+E")
         export_action.triggered.connect(self._export_excel)
@@ -150,6 +158,10 @@ class MainWindow(QMainWindow):
         import_btn = QAction("📥 Import", self)
         import_btn.triggered.connect(self._import_csv)
         toolbar.addAction(import_btn)
+        
+        manual_btn = QAction("➕ Add Entry", self)
+        manual_btn.triggered.connect(self._add_manual_entry)
+        toolbar.addAction(manual_btn)
         
         export_btn = QAction("📤 Export", self)
         export_btn.triggered.connect(self._export_excel)
@@ -221,6 +233,12 @@ class MainWindow(QMainWindow):
     def _import_csv(self):
         """Open CSV import dialog."""
         dialog = ImportDialog(self.current_profile.id, self)
+        if dialog.exec():
+            self._refresh_all()
+    
+    def _add_manual_entry(self):
+        """Open manual entry dialog."""
+        dialog = EntryDialog(self.current_profile.id, self)
         if dialog.exec():
             self._refresh_all()
     

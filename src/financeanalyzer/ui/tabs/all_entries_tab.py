@@ -80,6 +80,7 @@ class AllEntriesTab(QWidget):
         filter_layout.addWidget(self.filter_btn)
         
         self.clear_btn = QPushButton("Clear")
+        self.clear_btn.setObjectName("clearBtn")
         self.clear_btn.clicked.connect(self._clear_filters)
         filter_layout.addWidget(self.clear_btn)
         
@@ -122,6 +123,7 @@ class AllEntriesTab(QWidget):
         footer_layout.addStretch()
         
         self.delete_btn = QPushButton("🗑️ Delete Selected")
+        self.delete_btn.setObjectName("deleteBtn")
         self.delete_btn.clicked.connect(self._delete_selected)
         footer_layout.addWidget(self.delete_btn)
         
@@ -130,10 +132,14 @@ class AllEntriesTab(QWidget):
     def set_profile(self, profile_id: int):
         """Set the current profile."""
         self.profile_id = profile_id
+        self._filters_dirty = True
         self.refresh()
     
-    def _load_filters(self):
-        """Load filter options."""
+    def _load_filters_if_needed(self):
+        """Load filter options only if needed."""
+        if not getattr(self, '_filters_dirty', True):
+            return
+        
         # Categories
         self.category_filter.clear()
         self.category_filter.addItem("All", None)
@@ -152,6 +158,8 @@ class AllEntriesTab(QWidget):
         for source in entry_service.get_sources():
             self.source_filter.addItem(source, source)
         entry_service.close()
+        
+        self._filters_dirty = False
     
     def _clear_filters(self):
         """Clear all filters."""
@@ -164,7 +172,12 @@ class AllEntriesTab(QWidget):
     
     def refresh(self):
         """Refresh the table data."""
-        self._load_filters()
+        import time
+        t0 = time.perf_counter()
+        
+        self._load_filters_if_needed()
+        t1 = time.perf_counter()
+        print(f"[PROFILE] _load_filters_if_needed: {(t1-t0)*1000:.1f}ms")
         
         entry_service = EntryService(self.profile_id)
         
@@ -189,15 +202,33 @@ class AllEntriesTab(QWidget):
                 start_date=start, end_date=end, source=source
             )
         
+        entry_service.close()
+        t2 = time.perf_counter()
+        print(f"[PROFILE] get_all_entries ({len(entries)} entries): {(t2-t1)*1000:.1f}ms")
+        
         # Apply search filter
         if search:
             entries = [e for e in entries if search in e.description.lower()]
         
-        # Get categories for display
+        # Get categories for display (cached if available)
         category_service = CategoryService(self.profile_id)
         categories = {c.id: c.name for c in category_service.get_all_categories()}
         category_service.close()
+        t3 = time.perf_counter()
+        print(f"[PROFILE] get_categories: {(t3-t2)*1000:.1f}ms")
         
+        # Pre-create colors once (huge performance gain)
+        color_green = QColor("green")
+        color_red = QColor("red")
+        color_orange = QColor("orange")
+        
+        # Disable ALL updates for faster rendering
+        self.table.setUpdatesEnabled(False)
+        self.table.blockSignals(True)
+        self.table.setSortingEnabled(False)
+        
+        # Clear and resize
+        self.table.setRowCount(0)  # Clear first
         self.table.setRowCount(len(entries))
         self.count_label.setText(f"{len(entries)} entries")
         
@@ -207,17 +238,13 @@ class AllEntriesTab(QWidget):
             date_item.setData(Qt.UserRole, entry.id)
             self.table.setItem(row, 0, date_item)
             
-            # Amount
+            # Amount - use pre-created colors
             amount_item = QTableWidgetItem(f"€{entry.amount:,.2f}")
-            if entry.amount > 0:
-                amount_item.setForeground(QColor("green"))
-            else:
-                amount_item.setForeground(QColor("red"))
+            amount_item.setForeground(color_green if entry.amount > 0 else color_red)
             self.table.setItem(row, 1, amount_item)
             
             # Description
-            desc_item = QTableWidgetItem(entry.description)
-            self.table.setItem(row, 2, desc_item)
+            self.table.setItem(row, 2, QTableWidgetItem(entry.description))
             
             # Category
             if entry.category_id:
@@ -226,20 +253,26 @@ class AllEntriesTab(QWidget):
                 cat_name = "—"
             cat_item = QTableWidgetItem(cat_name)
             if entry.has_conflict:
-                cat_item.setForeground(QColor("orange"))
-                cat_item.setText("⚠️ Conflict")
+                cat_item.setForeground(color_orange)
+                cat_item.setText("Conflict")
             self.table.setItem(row, 3, cat_item)
             
             # Source
-            source_item = QTableWidgetItem(entry.source)
-            self.table.setItem(row, 4, source_item)
+            self.table.setItem(row, 4, QTableWidgetItem(entry.source))
             
             # Manual flag
-            manual_item = QTableWidgetItem("✓" if entry.is_manual_category else "")
+            manual_item = QTableWidgetItem("Y" if entry.is_manual_category else "")
             manual_item.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(row, 5, manual_item)
         
-        entry_service.close()
+        # Re-enable everything after batch insert
+        self.table.blockSignals(False)
+        self.table.setUpdatesEnabled(True)
+        
+        t4 = time.perf_counter()
+        print(f"[PROFILE] table population: {(t4-t3)*1000:.1f}ms")
+        print(f"[PROFILE] TOTAL refresh: {(t4-t0)*1000:.1f}ms")
+        print("---")
     
     def _show_context_menu(self, position):
         """Show context menu for table."""

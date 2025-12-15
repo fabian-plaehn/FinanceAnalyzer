@@ -107,6 +107,12 @@ class UncategorizedTab(QWidget):
         
         entry_service = EntryService(self.profile_id)
         entries = entry_service.get_all_entries(uncategorized_only=True)
+        entry_service.close()
+        
+        # Cache categories once for performance
+        category_service = CategoryService(self.profile_id)
+        categories = category_service.get_all_categories()
+        category_service.close()
         
         self.table.setRowCount(len(entries))
         self.count_label.setText(f"{len(entries)} uncategorized entries")
@@ -133,22 +139,17 @@ class UncategorizedTab(QWidget):
             source_item = QTableWidgetItem(entry.source)
             self.table.setItem(row, 3, source_item)
             
-            # Actions - Quick assign dropdown
+            # Actions - Quick assign dropdown (using cached categories)
             action_combo = QComboBox()
             action_combo.addItem("-- Assign --", None)
-            
-            category_service = CategoryService(self.profile_id)
-            for cat in category_service.get_all_categories():
+            for cat in categories:
                 action_combo.addItem(cat.name, cat.id)
-            category_service.close()
             
             action_combo.currentIndexChanged.connect(
                 lambda idx, e_id=entry.id, combo=action_combo: 
                 self._quick_assign(e_id, combo.currentData())
             )
             self.table.setCellWidget(row, 4, action_combo)
-        
-        entry_service.close()
     
     def _quick_assign(self, entry_id: int, category_id: int | None):
         """Quick assign category to a single entry."""

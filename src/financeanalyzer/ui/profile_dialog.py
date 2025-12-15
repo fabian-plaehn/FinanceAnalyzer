@@ -80,17 +80,17 @@ class ProfileDialog(QDialog):
         button_layout = QHBoxLayout()
         
         self.delete_btn = QPushButton("Delete")
+        self.delete_btn.setObjectName("deleteBtn")
         self.delete_btn.setEnabled(False)
         self.delete_btn.clicked.connect(self._delete_profile)
-        self.delete_btn.setStyleSheet("background-color: #d9534f; color: white;")
         button_layout.addWidget(self.delete_btn)
         
         button_layout.addStretch()
         
         self.select_btn = QPushButton("Select")
+        self.select_btn.setObjectName("successBtn")
         self.select_btn.setEnabled(False)
         self.select_btn.clicked.connect(self._on_select)
-        self.select_btn.setStyleSheet("background-color: #5cb85c; color: white;")
         button_layout.addWidget(self.select_btn)
         
         layout.addLayout(button_layout)
