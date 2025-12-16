@@ -113,7 +113,11 @@ def main():
             background-color: #4472C4;
             color: white;
         }
-        QTableWidget::item:hover {
+        QTableWidget::item:selected:hover {
+            background-color: #3461b3;
+            color: white;
+        }
+        QTableWidget::item:hover:!selected {
             background-color: #e8f0fe;
         }
         QHeaderView::section {

@@ -12,9 +12,10 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QAbstractItemView,
     QMessageBox,
+    QMenu,
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QAction
 
 from ...services.entry_service import EntryService
 from ...services.category_service import CategoryService
@@ -66,6 +67,8 @@ class UncategorizedTab(QWidget):
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.table.customContextMenuRequested.connect(self._show_context_menu)
         
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
@@ -113,7 +116,17 @@ class UncategorizedTab(QWidget):
         category_service = CategoryService(self.profile_id)
         categories = category_service.get_all_categories()
         category_service.close()
+        self._cached_categories = categories  # Store for context menu
         
+        # Pre-create colors
+        color_green = QColor("green")
+        color_red = QColor("red")
+        
+        # Disable updates during population
+        self.table.setUpdatesEnabled(False)
+        self.table.blockSignals(True)
+        self.table.setSortingEnabled(False)
+        self.table.setRowCount(0)
         self.table.setRowCount(len(entries))
         self.count_label.setText(f"{len(entries)} uncategorized entries")
         
@@ -125,31 +138,21 @@ class UncategorizedTab(QWidget):
             
             # Amount
             amount_item = QTableWidgetItem(f"€{entry.amount:,.2f}")
-            if entry.amount > 0:
-                amount_item.setForeground(QColor("green"))
-            else:
-                amount_item.setForeground(QColor("red"))
+            amount_item.setForeground(color_green if entry.amount > 0 else color_red)
             self.table.setItem(row, 1, amount_item)
             
             # Description
-            desc_item = QTableWidgetItem(entry.description)
-            self.table.setItem(row, 2, desc_item)
+            self.table.setItem(row, 2, QTableWidgetItem(entry.description))
             
             # Source
-            source_item = QTableWidgetItem(entry.source)
-            self.table.setItem(row, 3, source_item)
+            self.table.setItem(row, 3, QTableWidgetItem(entry.source))
             
-            # Actions - Quick assign dropdown (using cached categories)
-            action_combo = QComboBox()
-            action_combo.addItem("-- Assign --", None)
-            for cat in categories:
-                action_combo.addItem(cat.name, cat.id)
-            
-            action_combo.currentIndexChanged.connect(
-                lambda idx, e_id=entry.id, combo=action_combo: 
-                self._quick_assign(e_id, combo.currentData())
-            )
-            self.table.setCellWidget(row, 4, action_combo)
+            # Actions placeholder - use context menu instead of slow combobox
+            self.table.setItem(row, 4, QTableWidgetItem("Right-click"))
+        
+        # Re-enable updates
+        self.table.blockSignals(False)
+        self.table.setUpdatesEnabled(True)
     
     def _quick_assign(self, entry_id: int, category_id: int | None):
         """Quick assign category to a single entry."""
@@ -160,6 +163,37 @@ class UncategorizedTab(QWidget):
         entry_service.set_category(entry_id, category_id, is_manual=True)
         entry_service.close()
         
+        self.refresh()
+    
+    def _show_context_menu(self, position):
+        """Show context menu for quick category assignment."""
+        selected_rows = set(item.row() for item in self.table.selectedItems())
+        if not selected_rows:
+            return
+        
+        menu = QMenu(self)
+        
+        # Add category options from cached categories
+        categories = getattr(self, '_cached_categories', [])
+        for cat in categories:
+            action = QAction(f"Assign: {cat.name}", self)
+            action.triggered.connect(
+                lambda checked, c_id=cat.id: self._assign_to_selected(c_id)
+            )
+            menu.addAction(action)
+        
+        menu.exec(self.table.viewport().mapToGlobal(position))
+    
+    def _assign_to_selected(self, category_id: int):
+        """Assign category to all selected rows."""
+        selected_rows = set(item.row() for item in self.table.selectedItems())
+        entry_service = EntryService(self.profile_id)
+        
+        for row in selected_rows:
+            entry_id = self.table.item(row, 0).data(Qt.UserRole)
+            entry_service.set_category(entry_id, category_id, is_manual=True)
+        
+        entry_service.close()
         self.refresh()
     
     def _assign_category(self):
