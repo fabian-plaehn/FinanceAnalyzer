@@ -86,15 +86,15 @@ class DashboardTab(QWidget):
         summary_layout = QHBoxLayout()
         
         self.total_income_label = QLabel("Total Income: €0.00")
-        self.total_income_label.setStyleSheet("color: green; font-weight: bold;")
+        self.total_income_label.setStyleSheet("color: #3fb950; font-weight: bold; font-size: 14px;")
         summary_layout.addWidget(self.total_income_label)
         
         self.total_expense_label = QLabel("Total Expenses: €0.00")
-        self.total_expense_label.setStyleSheet("color: red; font-weight: bold;")
+        self.total_expense_label.setStyleSheet("color: #f85149; font-weight: bold; font-size: 14px;")
         summary_layout.addWidget(self.total_expense_label)
         
         self.net_label = QLabel("Net: €0.00")
-        self.net_label.setStyleSheet("font-weight: bold;")
+        self.net_label.setStyleSheet("font-weight: bold; font-size: 14px; color: #c9d1d9;")
         summary_layout.addWidget(self.net_label)
         
         summary_layout.addStretch()
@@ -165,9 +165,9 @@ class DashboardTab(QWidget):
             
             # Color based on total
             if cat_total > 0:
-                cat_item.setForeground(2, QColor("green"))
+                cat_item.setForeground(2, QColor("#3fb950"))
             else:
-                cat_item.setForeground(2, QColor("red"))
+                cat_item.setForeground(2, QColor("#f85149"))
             
             # Add entries as children
             for entry in sorted(cat_entries, key=lambda e: e.entry_date, reverse=True):
@@ -178,10 +178,10 @@ class DashboardTab(QWidget):
                 ])
                 
                 if entry.amount > 0:
-                    entry_item.setForeground(2, QColor("green"))
+                    entry_item.setForeground(2, QColor("#3fb950"))
                     total_income += entry.amount
                 else:
-                    entry_item.setForeground(2, QColor("red"))
+                    entry_item.setForeground(2, QColor("#f85149"))
                     total_expense += entry.amount
                 
                 cat_item.addChild(entry_item)
@@ -198,9 +198,9 @@ class DashboardTab(QWidget):
         self.net_label.setText(f"Net: €{net:,.2f}")
         
         if net >= 0:
-            self.net_label.setStyleSheet("color: green; font-weight: bold;")
+            self.net_label.setStyleSheet("color: #3fb950; font-weight: bold; font-size: 14px;")
         else:
-            self.net_label.setStyleSheet("color: red; font-weight: bold;")
+            self.net_label.setStyleSheet("color: #f85149; font-weight: bold; font-size: 14px;")
         
         entry_service.close()
         category_service.close()

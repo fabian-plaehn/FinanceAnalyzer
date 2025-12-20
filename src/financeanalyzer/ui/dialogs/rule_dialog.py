@@ -134,9 +134,9 @@ class RuleManagerDialog(QDialog):
             enabled_item = QTableWidgetItem("✓" if rule.enabled else "✗")
             enabled_item.setTextAlignment(Qt.AlignCenter)
             if rule.enabled:
-                enabled_item.setForeground(QColor("green"))
+                enabled_item.setForeground(QColor("#3fb950"))
             else:
-                enabled_item.setForeground(QColor("red"))
+                enabled_item.setForeground(QColor("#f85149"))
             self.table.setItem(row, 3, enabled_item)
             
             # Actions
@@ -146,7 +146,7 @@ class RuleManagerDialog(QDialog):
             toggle_btn.clicked.connect(lambda _, r_id=rule.id: self._toggle_rule(r_id))
             
             delete_btn = QPushButton("Delete")
-            delete_btn.setStyleSheet("background-color: #d9534f; color: white;")
+            delete_btn.setObjectName("deleteBtn")
             delete_btn.clicked.connect(lambda _, r_id=rule.id: self._delete_rule(r_id))
             
             from PySide6.QtWidgets import QWidget

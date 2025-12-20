@@ -73,7 +73,7 @@ class EntryDialog(QDialog):
         
         self.save_btn = QPushButton("Save")
         self.save_btn.clicked.connect(self._save)
-        self.save_btn.setStyleSheet("background-color: #5cb85c; color: white;")
+        self.save_btn.setObjectName("successBtn")
         button_layout.addWidget(self.save_btn)
         
         layout.addLayout(button_layout)

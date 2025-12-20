@@ -88,7 +88,7 @@ class AllEntriesTab(QWidget):
         
         # Count label
         self.count_label = QLabel("0 entries")
-        self.count_label.setStyleSheet("font-size: 12px;")
+        self.count_label.setStyleSheet("font-size: 13px; color: #8b949e;")
         layout.addWidget(self.count_label)
         
         # Table
@@ -217,10 +217,10 @@ class AllEntriesTab(QWidget):
         t3 = time.perf_counter()
         print(f"[PROFILE] get_categories: {(t3-t2)*1000:.1f}ms")
         
-        # Pre-create colors once (huge performance gain)
-        color_green = QColor("green")
-        color_red = QColor("red")
-        color_orange = QColor("orange")
+        # Pre-create colors once (dark theme compatible)
+        color_green = QColor("#3fb950")
+        color_red = QColor("#f85149")
+        color_orange = QColor("#f0883e")
         
         # Disable ALL updates for faster rendering
         self.table.setUpdatesEnabled(False)

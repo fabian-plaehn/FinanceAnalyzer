@@ -51,7 +51,7 @@ class ConflictsTab(QWidget):
         # Count label
         header_layout = QHBoxLayout()
         self.count_label = QLabel("0 entries with conflicts")
-        self.count_label.setStyleSheet("font-size: 14px; font-weight: bold; color: orange;")
+        self.count_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #f0883e;")
         header_layout.addWidget(self.count_label)
         header_layout.addStretch()
         layout.addLayout(header_layout)
@@ -114,9 +114,9 @@ class ConflictsTab(QWidget):
             # Amount
             amount_item = QTableWidgetItem(f"€{entry.amount:,.2f}")
             if entry.amount > 0:
-                amount_item.setForeground(QColor("green"))
+                amount_item.setForeground(QColor("#3fb950"))
             else:
-                amount_item.setForeground(QColor("red"))
+                amount_item.setForeground(QColor("#f85149"))
             self.table.setItem(row, 1, amount_item)
             
             # Description
@@ -131,7 +131,7 @@ class ConflictsTab(QWidget):
                 rule_texts.append(f"'{rule.pattern}' → {cat_name}")
             
             rules_item = QTableWidgetItem("\n".join(rule_texts))
-            rules_item.setForeground(QColor("orange"))
+            rules_item.setForeground(QColor("#f0883e"))
             self.table.setItem(row, 3, rules_item)
             
             # Source

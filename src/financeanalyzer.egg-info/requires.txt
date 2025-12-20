@@ -4,3 +4,4 @@ pandas>=2.0.0
 openpyxl>=3.1.0
 packaging>=23.0
 pytest>=7.0.0
+nuitka>=2.8.9

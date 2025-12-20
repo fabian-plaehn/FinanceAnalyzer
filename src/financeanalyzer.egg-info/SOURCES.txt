@@ -13,8 +13,8 @@ src/financeanalyzer/database/models.py
 src/financeanalyzer/database/service.py
 src/financeanalyzer/export/__init__.py
 src/financeanalyzer/export/excel_export.py
-src/financeanalyzer/import/__init__.py
-src/financeanalyzer/import/csv_parser.py
+src/financeanalyzer/importer/__init__.py
+src/financeanalyzer/importer/csv_parser.py
 src/financeanalyzer/services/__init__.py
 src/financeanalyzer/services/categorization_engine.py
 src/financeanalyzer/services/category_service.py

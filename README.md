@@ -1,3 +1,5 @@
+embrace the vibe prototyping
+
 # FinanceAnalyzer
 
 A local, offline GUI application to help small businesses prepare financial data for taxes.

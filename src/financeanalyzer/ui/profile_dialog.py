@@ -42,13 +42,14 @@ class ProfileDialog(QDialog):
         
         # Title
         title = QLabel("FinanceAnalyzer")
-        title.setFont(QFont("Arial", 18, QFont.Bold))
+        title.setFont(QFont("Segoe UI", 24, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("color: #58a6ff;")
         layout.addWidget(title)
         
         subtitle = QLabel("Select a business profile to continue")
         subtitle.setAlignment(Qt.AlignCenter)
-        subtitle.setStyleSheet("color: #666;")
+        subtitle.setStyleSheet("color: #8b949e; font-size: 13px;")
         layout.addWidget(subtitle)
         
         # Separator

@@ -66,7 +66,7 @@ class CategoryManagerDialog(QDialog):
         self.delete_btn = QPushButton("Delete")
         self.delete_btn.setEnabled(False)
         self.delete_btn.clicked.connect(self._delete_category)
-        self.delete_btn.setStyleSheet("background-color: #d9534f; color: white;")
+        self.delete_btn.setObjectName("deleteBtn")
         button_layout.addWidget(self.delete_btn)
         
         button_layout.addStretch()

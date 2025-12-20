@@ -40,7 +40,7 @@ class UncategorizedTab(QWidget):
         header_layout = QHBoxLayout()
         
         self.count_label = QLabel("0 uncategorized entries")
-        self.count_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+        self.count_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #f0883e;")
         header_layout.addWidget(self.count_label)
         
         header_layout.addStretch()
@@ -118,9 +118,9 @@ class UncategorizedTab(QWidget):
         category_service.close()
         self._cached_categories = categories  # Store for context menu
         
-        # Pre-create colors
-        color_green = QColor("green")
-        color_red = QColor("red")
+        # Pre-create colors (dark theme compatible)
+        color_green = QColor("#3fb950")
+        color_red = QColor("#f85149")
         
         # Disable updates during population
         self.table.setUpdatesEnabled(False)
