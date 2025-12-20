@@ -4,7 +4,6 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QTableWidget,
     QTableWidgetItem,
     QPushButton,
     QLabel,
@@ -22,6 +21,19 @@ from PySide6.QtGui import QColor, QAction
 
 from ...services.entry_service import EntryService
 from ...services.category_service import CategoryService
+from ..widgets.configurable_table import ConfigurableTable
+
+
+# Column definitions: (key, display_name, default_visible, resize_mode)
+ALL_ENTRIES_COLUMNS = [
+    ("date", "Date", True, "content"),
+    ("amount", "Amount", True, "content"),
+    ("sender_receiver", "Sender/Receiver", True, "content"),
+    ("description", "Description", True, "stretch"),
+    ("category", "Category", True, "content"),
+    ("source", "Source", True, "content"),
+    ("manual", "Manual", False, "content"),
+]
 
 
 class AllEntriesTab(QWidget):
@@ -86,30 +98,28 @@ class AllEntriesTab(QWidget):
         
         layout.addWidget(filter_group)
         
-        # Count label
+        # Count label and column hint
+        info_layout = QHBoxLayout()
         self.count_label = QLabel("0 entries")
         self.count_label.setStyleSheet("font-size: 13px; color: #8b949e;")
-        layout.addWidget(self.count_label)
+        info_layout.addWidget(self.count_label)
         
-        # Table
-        self.table = QTableWidget()
-        self.table.setColumnCount(6)
-        self.table.setHorizontalHeaderLabels([
-            "Date", "Amount", "Description", "Category", "Source", "Manual"
-        ])
-        self.table.setAlternatingRowColors(True)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        info_layout.addStretch()
+        
+        hint_label = QLabel("💡 Right-click header to show/hide columns")
+        hint_label.setStyleSheet("font-size: 11px; color: #6e7681;")
+        info_layout.addWidget(hint_label)
+        
+        layout.addLayout(info_layout)
+        
+        # Table - using ConfigurableTable
+        self.table = ConfigurableTable(
+            columns=ALL_ENTRIES_COLUMNS,
+            table_id="all_entries",
+            parent=self
+        )
         self.table.setContextMenuPolicy(Qt.CustomContextMenu)
         self.table.customContextMenuRequested.connect(self._show_context_menu)
-        
-        header = self.table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
         
         layout.addWidget(self.table)
         
@@ -233,20 +243,24 @@ class AllEntriesTab(QWidget):
         self.count_label.setText(f"{len(entries)} entries")
         
         for row, entry in enumerate(entries):
-            # Date
+            # Date (column 0)
             date_item = QTableWidgetItem(entry.entry_date.strftime("%d.%m.%Y"))
             date_item.setData(Qt.UserRole, entry.id)
             self.table.setItem(row, 0, date_item)
             
-            # Amount - use pre-created colors
+            # Amount (column 1)
             amount_item = QTableWidgetItem(f"€{entry.amount:,.2f}")
             amount_item.setForeground(color_green if entry.amount > 0 else color_red)
             self.table.setItem(row, 1, amount_item)
             
-            # Description
-            self.table.setItem(row, 2, QTableWidgetItem(entry.description))
+            # Sender/Receiver (column 2)
+            sender_receiver = getattr(entry, 'sender_receiver', None) or ""
+            self.table.setItem(row, 2, QTableWidgetItem(sender_receiver))
             
-            # Category
+            # Description (column 3)
+            self.table.setItem(row, 3, QTableWidgetItem(entry.description))
+            
+            # Category (column 4)
             if entry.category_id:
                 cat_name = categories.get(entry.category_id, f"? ({entry.category_id})")
             else:
@@ -255,15 +269,15 @@ class AllEntriesTab(QWidget):
             if entry.has_conflict:
                 cat_item.setForeground(color_orange)
                 cat_item.setText("Conflict")
-            self.table.setItem(row, 3, cat_item)
+            self.table.setItem(row, 4, cat_item)
             
-            # Source
-            self.table.setItem(row, 4, QTableWidgetItem(entry.source))
+            # Source (column 5)
+            self.table.setItem(row, 5, QTableWidgetItem(entry.source))
             
-            # Manual flag
+            # Manual flag (column 6)
             manual_item = QTableWidgetItem("Y" if entry.is_manual_category else "")
             manual_item.setTextAlignment(Qt.AlignCenter)
-            self.table.setItem(row, 5, manual_item)
+            self.table.setItem(row, 6, manual_item)
         
         # Re-enable everything after batch insert
         self.table.blockSignals(False)

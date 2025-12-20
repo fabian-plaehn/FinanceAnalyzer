@@ -61,7 +61,7 @@ class ImportDialog(QWizard):
             # Detach from session
             return [(c.id, c.name, c.delimiter, c.date_column, c.amount_column, 
                      c.description_column, c.date_format, c.encoding, c.skip_rows,
-                     c.decimal_separator, c.thousands_separator) for c in configs]
+                     c.decimal_separator, c.thousands_separator, c.sender_receiver_column) for c in configs]
     
     def save_config(self, name: str, config_data: dict) -> int:
         """Save a new CSV configuration."""
@@ -205,6 +205,9 @@ class ConfigurationPage(QWizardPage):
         self.desc_col = QComboBox()
         form.addRow("Description column:", self.desc_col)
         
+        self.sender_receiver_col = QComboBox()
+        form.addRow("Sender/Receiver column (optional):", self.sender_receiver_col)
+        
         layout.addWidget(config_group)
         
         # Reload columns button
@@ -244,8 +247,8 @@ class ConfigurationPage(QWizardPage):
         
         # Unpack: id, name, delimiter, date_column, amount_column, 
         #         description_column, date_format, encoding, skip_rows,
-        #         decimal_separator, thousands_separator
-        _, name, delimiter, date_col, amount_col, desc_col, date_fmt, encoding, skip, dec_sep, thou_sep = config_data
+        #         decimal_separator, thousands_separator, sender_receiver_column
+        _, name, delimiter, date_col, amount_col, desc_col, date_fmt, encoding, skip, dec_sep, thou_sep, sender_receiver_col = config_data
         
         # Set delimiter
         for i in range(self.delimiter_combo.count()):
@@ -288,6 +291,12 @@ class ConfigurationPage(QWizardPage):
             if self.thousands_sep.itemData(i) == thou_sep:
                 self.thousands_sep.setCurrentIndex(i)
                 break
+        
+        # Set sender/receiver column if present
+        if sender_receiver_col:
+            idx = self.sender_receiver_col.findText(sender_receiver_col)
+            if idx >= 0:
+                self.sender_receiver_col.setCurrentIndex(idx)
     
     def _reload_columns(self):
         """Reload column headers from file."""
@@ -303,6 +312,12 @@ class ConfigurationPage(QWizardPage):
                 combo.clear()
                 combo.addItems(headers)
             
+            # Sender/receiver is optional - add "None" option
+            self.sender_receiver_col.clear()
+            self.sender_receiver_col.addItem("-- None --", None)
+            for h in headers:
+                self.sender_receiver_col.addItem(h, h)
+            
             # Try to auto-detect common column names
             for i, h in enumerate(headers):
                 h_lower = h.lower()
@@ -312,12 +327,20 @@ class ConfigurationPage(QWizardPage):
                     self.amount_col.setCurrentIndex(i)
                 if "verwendungszweck" in h_lower or "description" in h_lower or "zweck" in h_lower:
                     self.desc_col.setCurrentIndex(i)
+                # Auto-detect sender/receiver column
+                if "zahlungsbeteiligter" in h_lower or "sender" in h_lower or "empfänger" in h_lower or "partner" in h_lower:
+                    idx = self.sender_receiver_col.findData(h)
+                    if idx >= 0:
+                        self.sender_receiver_col.setCurrentIndex(idx)
                     
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Could not read file: {e}")
     
     def validatePage(self):
         """Validate page before continuing."""
+        # Get sender/receiver column if selected
+        sender_receiver_col = self.sender_receiver_col.currentData()
+        
         # Build config
         config = CSVConfiguration(
             profile_id=self.wizard_ref.profile_id,
@@ -330,7 +353,8 @@ class ConfigurationPage(QWizardPage):
             amount_column=self.amount_col.currentText(),
             description_column=self.desc_col.currentText(),
             decimal_separator=self.decimal_sep.currentData(),
-            thousands_separator=self.thousands_sep.currentData() or ""
+            thousands_separator=self.thousands_sep.currentData() or "",
+            sender_receiver_column=sender_receiver_col
         )
         self.wizard_ref.config = config
         
@@ -347,7 +371,8 @@ class ConfigurationPage(QWizardPage):
                     "amount_column": config.amount_column,
                     "description_column": config.description_column,
                     "decimal_separator": config.decimal_separator,
-                    "thousands_separator": config.thousands_separator
+                    "thousands_separator": config.thousands_separator,
+                    "sender_receiver_column": config.sender_receiver_column
                 }
             )
         
@@ -369,14 +394,15 @@ class PreviewPage(QWizardPage):
         layout.addWidget(self.status_label)
         
         self.table = QTableWidget()
-        self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderLabels(["Date", "Amount", "Description"])
+        self.table.setColumnCount(4)
+        self.table.setHorizontalHeaderLabels(["Date", "Amount", "Sender/Receiver", "Description"])
         self.table.setAlternatingRowColors(True)
         
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.Stretch)
         
         layout.addWidget(self.table)
     
@@ -396,7 +422,8 @@ class PreviewPage(QWizardPage):
             for row, entry in enumerate(entries):
                 self.table.setItem(row, 0, QTableWidgetItem(entry.entry_date.strftime("%d.%m.%Y")))
                 self.table.setItem(row, 1, QTableWidgetItem(f"€{entry.amount:,.2f}"))
-                self.table.setItem(row, 2, QTableWidgetItem(entry.description))
+                self.table.setItem(row, 2, QTableWidgetItem(entry.sender_receiver or ""))
+                self.table.setItem(row, 3, QTableWidgetItem(entry.description))
             
             self.status_label.setText(f"✓ Successfully parsed {len(entries)} entries")
             self.status_label.setStyleSheet("color: green;")
@@ -464,6 +491,7 @@ class ImportPage(QWizardPage):
                 entry_date=parsed.entry_date,
                 amount=parsed.amount,
                 description=parsed.description,
+                sender_receiver=parsed.sender_receiver,
                 source=source,
                 import_hash=import_hash
             )

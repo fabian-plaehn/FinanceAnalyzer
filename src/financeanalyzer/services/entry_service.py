@@ -52,13 +52,14 @@ class EntryService:
         """
         content = f"{entry_date.isoformat()}|{amount}|{description}|{source}"
         return hashlib.sha256(content.encode()).hexdigest()
-    
+
     def create_entry(
         self,
         entry_date: date,
         amount: Decimal,
         description: str,
         source: str,
+        sender_receiver: str | None = None,
         category_id: int | None = None,
         is_manual_category: bool = False,
         has_conflict: bool = False,
@@ -71,6 +72,7 @@ class EntryService:
             amount: The transaction amount.
             description: The transaction description.
             source: The transaction source (e.g., "VR Bank", "Cash").
+            sender_receiver: Optional sender/receiver name.
             category_id: Optional category ID.
             is_manual_category: Whether category was manually assigned.
             has_conflict: Whether multiple rules matched.
@@ -89,6 +91,7 @@ class EntryService:
             entry_date=entry_date,
             amount=amount,
             description=description,
+            sender_receiver=sender_receiver,
             source=source,
             category_id=category_id,
             is_manual_category=is_manual_category,

@@ -15,6 +15,7 @@ class ParsedEntry(NamedTuple):
     entry_date: date
     amount: Decimal
     description: str
+    sender_receiver: str | None = None
     import_hash: str | None = None
 
 
@@ -161,10 +162,16 @@ class CSVParser:
                     amount = self._parse_amount(row[self.config.amount_column])
                     description = row[self.config.description_column].strip()
                     
+                    # Parse sender/receiver if column is configured
+                    sender_receiver = None
+                    if self.config.sender_receiver_column and self.config.sender_receiver_column in reader.fieldnames:
+                        sender_receiver = row.get(self.config.sender_receiver_column, "").strip() or None
+                    
                     entries.append(ParsedEntry(
                         entry_date=entry_date,
                         amount=amount,
-                        description=description
+                        description=description,
+                        sender_receiver=sender_receiver
                     ))
                 except CSVParseError as e:
                     raise CSVParseError(f"Error on row {row_num}: {e}")

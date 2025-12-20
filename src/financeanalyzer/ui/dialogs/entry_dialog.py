@@ -51,6 +51,10 @@ class EntryDialog(QDialog):
         self.description_input.setPlaceholderText("Description...")
         form.addRow("Description:", self.description_input)
         
+        self.sender_receiver_input = QLineEdit()
+        self.sender_receiver_input.setPlaceholderText("Sender/Receiver (optional)...")
+        form.addRow("Sender/Receiver:", self.sender_receiver_input)
+        
         self.source_input = QLineEdit()
         self.source_input.setText("Cash")
         form.addRow("Source:", self.source_input)
@@ -103,12 +107,14 @@ class EntryDialog(QDialog):
         source = self.source_input.text().strip() or "Cash"
         entry_date = self.date_input.date().toPython()
         category_id = self.category_combo.currentData()
+        sender_receiver = self.sender_receiver_input.text().strip() or None
         
         entry_service = EntryService(self.profile_id)
         entry_service.create_entry(
             entry_date=entry_date,
             amount=amount,
             description=description,
+            sender_receiver=sender_receiver,
             source=source,
             category_id=category_id,
             is_manual_category=category_id is not None
