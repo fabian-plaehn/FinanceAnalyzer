@@ -57,26 +57,53 @@ class CategorizationEngine:
             Rule.enabled == True
         ).all()
     
-    def _rule_matches(self, rule: Rule, description: str) -> bool:
-        """Check if a rule matches the description.
+    def _pattern_matches(self, rule: Rule, text: str) -> bool:
+        """Check if a rule's pattern matches the given text.
         
         Args:
             rule: The rule to check.
-            description: The entry description to match against.
+            text: The text to match against.
         
         Returns:
-            True if the rule matches, False otherwise.
+            True if the pattern matches, False otherwise.
         """
+        if not text:
+            return False
         if rule.rule_type == "contains":
             # Case-insensitive contains match
-            return rule.pattern.lower() in description.lower()
+            return rule.pattern.lower() in text.lower()
         elif rule.rule_type == "regex":
             try:
-                return bool(re.search(rule.pattern, description, re.IGNORECASE))
+                return bool(re.search(rule.pattern, text, re.IGNORECASE))
             except re.error:
                 # Invalid regex, don't match
                 return False
         return False
+    
+    def _rule_matches(self, rule: Rule, entry: Entry) -> bool:
+        """Check if a rule matches the entry based on its match_field.
+        
+        Args:
+            rule: The rule to check.
+            entry: The entry to match against.
+        
+        Returns:
+            True if the rule matches, False otherwise.
+        """
+        # Get match_field, defaulting to "description" for backwards compatibility
+        match_field = getattr(rule, 'match_field', None) or "description"
+        
+        if match_field == "description":
+            return self._pattern_matches(rule, entry.description)
+        elif match_field == "sender_receiver":
+            return self._pattern_matches(rule, entry.sender_receiver or "")
+        elif match_field == "any":
+            # Match if pattern found in either field
+            return (self._pattern_matches(rule, entry.description) or 
+                    self._pattern_matches(rule, entry.sender_receiver or ""))
+        else:
+            # Fallback to description
+            return self._pattern_matches(rule, entry.description)
     
     def find_matching_rules(self, entry: Entry) -> List[Rule]:
         """Find all rules that match an entry.
@@ -88,7 +115,7 @@ class CategorizationEngine:
             List of matching Rule objects.
         """
         rules = self._get_enabled_rules()
-        return [r for r in rules if self._rule_matches(r, entry.description)]
+        return [r for r in rules if self._rule_matches(r, entry)]
     
     def categorize_entry(self, entry: Entry, force: bool = False) -> CategorizationResult:
         """Categorize a single entry.

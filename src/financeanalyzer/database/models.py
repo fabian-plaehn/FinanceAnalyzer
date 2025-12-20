@@ -96,6 +96,7 @@ class Rule(Base):
     )
     rule_type: Mapped[str] = mapped_column(String(50), nullable=False)  # "contains" | "regex"
     pattern: Mapped[str] = mapped_column(Text, nullable=False)
+    match_field: Mapped[str] = mapped_column(String(50), default="description")  # "description" | "sender_receiver" | "any"
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     
@@ -123,6 +124,7 @@ class Entry(Base):
     # Transaction data
     entry_date: Mapped[date] = mapped_column(Date, nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    sender_receiver: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Name Zahlungsbeteiligter
     description: Mapped[str] = mapped_column(Text, nullable=False)
     source: Mapped[str] = mapped_column(String(255), nullable=False)  # e.g., "VR Bank", "Cash"
     
@@ -166,6 +168,7 @@ class CSVConfiguration(Base):
     date_format: Mapped[str] = mapped_column(String(50), default="%d.%m.%Y")
     amount_column: Mapped[str] = mapped_column(String(255), nullable=False)
     description_column: Mapped[str] = mapped_column(String(255), nullable=False)
+    sender_receiver_column: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # Optional
     
     # Optional: decimal separator for amount parsing
     decimal_separator: Mapped[str] = mapped_column(String(5), default=",")

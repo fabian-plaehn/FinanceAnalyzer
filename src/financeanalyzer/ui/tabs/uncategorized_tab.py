@@ -60,9 +60,9 @@ class UncategorizedTab(QWidget):
         
         # Table
         self.table = QTableWidget()
-        self.table.setColumnCount(5)
+        self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels([
-            "Date", "Amount", "Description", "Source", "Actions"
+            "Date", "Amount", "Sender/Receiver", "Description", "Source", "Actions"
         ])
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -73,9 +73,10 @@ class UncategorizedTab(QWidget):
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.Stretch)
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
         
         layout.addWidget(self.table)
         
@@ -141,14 +142,18 @@ class UncategorizedTab(QWidget):
             amount_item.setForeground(color_green if entry.amount > 0 else color_red)
             self.table.setItem(row, 1, amount_item)
             
+            # Sender/Receiver
+            sender_receiver = getattr(entry, 'sender_receiver', None) or ""
+            self.table.setItem(row, 2, QTableWidgetItem(sender_receiver))
+            
             # Description
-            self.table.setItem(row, 2, QTableWidgetItem(entry.description))
+            self.table.setItem(row, 3, QTableWidgetItem(entry.description))
             
             # Source
-            self.table.setItem(row, 3, QTableWidgetItem(entry.source))
+            self.table.setItem(row, 4, QTableWidgetItem(entry.source))
             
             # Actions placeholder - use context menu instead of slow combobox
-            self.table.setItem(row, 4, QTableWidgetItem("Right-click"))
+            self.table.setItem(row, 5, QTableWidgetItem("Right-click"))
         
         # Re-enable updates
         self.table.blockSignals(False)

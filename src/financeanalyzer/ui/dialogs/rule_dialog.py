@@ -45,10 +45,20 @@ class RuleManagerDialog(QDialog):
         
         # Rules table
         self.table = QTableWidget()
-        self.table.setColumnCount(5)
+        self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels([
-            "Type", "Pattern", "Category", "Enabled", "Actions"
+            "Type", "Match Field", "Pattern", "Category", "Enabled", "Actions"
         ])
+        self.table.setAlternatingRowColors(True)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         
@@ -73,6 +83,12 @@ class RuleManagerDialog(QDialog):
         self.pattern_input = QLineEdit()
         self.pattern_input.setPlaceholderText("Enter pattern to match...")
         add_layout.addRow("Pattern:", self.pattern_input)
+        
+        self.match_field_combo = QComboBox()
+        self.match_field_combo.addItem("Description", "description")
+        self.match_field_combo.addItem("Sender/Receiver", "sender_receiver")
+        self.match_field_combo.addItem("Any (Description or Sender/Receiver)", "any")
+        add_layout.addRow("Match Field:", self.match_field_combo)
         
         self.category_combo = QComboBox()
         self._load_categories()
@@ -121,14 +137,24 @@ class RuleManagerDialog(QDialog):
             type_item.setData(Qt.UserRole, rule.id)
             self.table.setItem(row, 0, type_item)
             
+            # Match Field
+            match_field = getattr(rule, 'match_field', None) or 'description'
+            match_field_display = {
+                'description': 'Description',
+                'sender_receiver': 'Sender/Receiver',
+                'any': 'Any'
+            }.get(match_field, match_field.title())
+            match_field_item = QTableWidgetItem(match_field_display)
+            self.table.setItem(row, 1, match_field_item)
+            
             # Pattern
             pattern_item = QTableWidgetItem(rule.pattern)
-            self.table.setItem(row, 1, pattern_item)
+            self.table.setItem(row, 2, pattern_item)
             
             # Category
             cat_name = rule.target_category.name if rule.target_category else "?"
             cat_item = QTableWidgetItem(cat_name)
-            self.table.setItem(row, 2, cat_item)
+            self.table.setItem(row, 3, cat_item)
             
             # Enabled
             enabled_item = QTableWidgetItem("✓" if rule.enabled else "✗")
@@ -137,7 +163,7 @@ class RuleManagerDialog(QDialog):
                 enabled_item.setForeground(QColor("#3fb950"))
             else:
                 enabled_item.setForeground(QColor("#f85149"))
-            self.table.setItem(row, 3, enabled_item)
+            self.table.setItem(row, 4, enabled_item)
             
             # Actions
             actions_widget = QHBoxLayout()
@@ -156,7 +182,7 @@ class RuleManagerDialog(QDialog):
             container_layout.addWidget(toggle_btn)
             container_layout.addWidget(delete_btn)
             
-            self.table.setCellWidget(row, 4, container)
+            self.table.setCellWidget(row, 5, container)
     
     def _add_rule(self):
         """Add a new rule."""
@@ -184,7 +210,8 @@ class RuleManagerDialog(QDialog):
         self._rule_service.create_rule(
             target_category_id=category_id,
             rule_type=rule_type,
-            pattern=pattern
+            pattern=pattern,
+            match_field=self.match_field_combo.currentData()
         )
         
         self.pattern_input.clear()
