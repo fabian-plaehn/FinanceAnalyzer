@@ -1,1 +1,84 @@
-Another Hobby / Test Project
+embrace the vibe prototyping
+
+# FinanceAnalyzer
+
+A local, offline GUI application to help small businesses prepare financial data for taxes.
+
+## Features
+
+- 📥 **CSV Import** - Import bank statements with configurable column mappings
+- 📁 **Categorization** - Automatic categorization using flexible rules (text contains, regex)
+- 🏷️ **Multiple Profiles** - Support for multiple business profiles
+- 📊 **Dashboard** - View entries grouped by category with date filtering
+- 📤 **Excel Export** - Export categorized data in accountant-friendly format
+
+## Technology Stack
+
+- Python 3.10+
+- PySide6 (Qt for Python)
+- SQLAlchemy + SQLite
+- pandas & openpyxl
+
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/user/FinanceAnalyzer.git
+cd FinanceAnalyzer
+
+# Install dependencies using uv
+uv sync
+```
+
+## Usage
+
+```bash
+# Run the application
+uv run python -m financeanalyzer.main
+```
+
+Or with the entry point:
+```bash
+uv run financeanalyzer
+```
+
+## Getting Started
+
+1. **Create a Profile** - On first launch, create a new business profile
+2. **Import CSV** - File → Import CSV to import bank statements
+3. **Configure Mapping** - Map CSV columns to date, amount, and description fields
+4. **Create Categories** - Edit → Manage Categories to create expense/income categories
+5. **Create Rules** - Edit → Manage Rules to set up auto-categorization rules
+6. **Review Entries** - Use the Uncategorized and Conflicts tabs to manually categorize remaining entries
+7. **Export** - File → Export to Excel to generate accountant-friendly reports
+
+## Project Structure
+
+```
+src/financeanalyzer/
+├── main.py              # Application entry point
+├── database/            # SQLAlchemy models and services
+├── services/            # Business logic (categorization, CRUD)
+├── importer/            # CSV parsing
+├── export/              # Excel export
+└── ui/                  # PySide6 UI components
+    ├── tabs/            # Main application tabs
+    └── dialogs/         # Dialog windows
+```
+
+## CSV Configuration
+
+The application supports any CSV format. When importing for the first time:
+1. Select your CSV file
+2. Configure the delimiter, encoding, and column mappings
+3. Optionally save the configuration for future imports from the same bank
+
+### Supported Settings
+- **Delimiter**: Semicolon, comma, tab
+- **Encoding**: UTF-8, Latin-1, CP1252, ISO-8859-1
+- **Date formats**: DD.MM.YYYY, YYYY-MM-DD, MM/DD/YYYY, etc.
+- **Number formats**: German (1.234,56) or US (1,234.56)
+
+## License
+
+MIT
