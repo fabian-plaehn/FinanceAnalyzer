@@ -12,6 +12,8 @@ Requires-Dist: packaging>=23.0
 Requires-Dist: pytest>=7.0.0
 Requires-Dist: nuitka>=2.8.9
 
+embrace the vibe prototyping
+
 # FinanceAnalyzer
 
 A local, offline GUI application to help small businesses prepare financial data for taxes.
