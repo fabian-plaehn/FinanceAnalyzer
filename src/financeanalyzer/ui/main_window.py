@@ -29,6 +29,7 @@ from .dialogs.import_dialog import ImportDialog
 from .dialogs.category_dialog import CategoryManagerDialog
 from .dialogs.rule_dialog import RuleManagerDialog
 from .dialogs.entry_dialog import EntryDialog
+from .dialogs.export_dialog import ExportDialog
 
 
 class MainWindow(QMainWindow):
@@ -243,34 +244,9 @@ class MainWindow(QMainWindow):
             self._refresh_all()
     
     def _export_excel(self):
-        """Export to Excel."""
-        from ..export.excel_export import ExcelExporter
-        
-        file_path, _ = QFileDialog.getSaveFileName(
-            self,
-            "Export to Excel",
-            "",
-            "Excel Files (*.xlsx)"
-        )
-        
-        if file_path:
-            if not file_path.endswith('.xlsx'):
-                file_path += '.xlsx'
-            
-            try:
-                exporter = ExcelExporter(self.current_profile.id)
-                exporter.export(file_path)
-                QMessageBox.information(
-                    self,
-                    "Export Complete",
-                    f"Data exported successfully to:\n{file_path}"
-                )
-            except Exception as e:
-                QMessageBox.critical(
-                    self,
-                    "Export Error",
-                    f"Failed to export data:\n{str(e)}"
-                )
+        """Open export dialog."""
+        dialog = ExportDialog(self.current_profile.id, self)
+        dialog.exec()
     
     def _manage_categories(self):
         """Open category manager dialog."""
