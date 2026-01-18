@@ -71,7 +71,7 @@ class DashboardTab(QWidget):
         
         # Tree view
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["Category / Description", "Date", "Amount"])
+        self.tree.setHeaderLabels(["Category / Description", "Sender/Receiver", "Date", "Amount"])
         self.tree.setAlternatingRowColors(True)
         self.tree.setRootIsDecorated(True)
         
@@ -79,6 +79,7 @@ class DashboardTab(QWidget):
         header.setSectionResizeMode(0, QHeaderView.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
         
         layout.addWidget(self.tree)
         
@@ -159,29 +160,32 @@ class DashboardTab(QWidget):
             cat_item = QTreeWidgetItem([
                 f"📁 {cat_name} ({len(cat_entries)})",
                 "",
+                "",
                 f"€{cat_total:,.2f}"
             ])
             cat_item.setFont(0, QFont("Arial", 10, QFont.Bold))
             
             # Color based on total
             if cat_total > 0:
-                cat_item.setForeground(2, QColor("#3fb950"))
+                cat_item.setForeground(3, QColor("#3fb950"))
             else:
-                cat_item.setForeground(2, QColor("#f85149"))
+                cat_item.setForeground(3, QColor("#f85149"))
             
             # Add entries as children
             for entry in sorted(cat_entries, key=lambda e: e.entry_date, reverse=True):
+                sender_receiver = getattr(entry, 'sender_receiver', None) or ""
                 entry_item = QTreeWidgetItem([
                     entry.description[:100],
+                    sender_receiver[:50] if sender_receiver else "",
                     entry.entry_date.strftime("%d.%m.%Y"),
                     f"€{entry.amount:,.2f}"
                 ])
                 
                 if entry.amount > 0:
-                    entry_item.setForeground(2, QColor("#3fb950"))
+                    entry_item.setForeground(3, QColor("#3fb950"))
                     total_income += entry.amount
                 else:
-                    entry_item.setForeground(2, QColor("#f85149"))
+                    entry_item.setForeground(3, QColor("#f85149"))
                     total_expense += entry.amount
                 
                 cat_item.addChild(entry_item)

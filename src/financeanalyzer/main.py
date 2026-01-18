@@ -538,18 +538,36 @@ def main():
     # Initialize database
     get_database_service()
     
-    # Show profile dialog
-    profile_dialog = ProfileDialog()
-    
-    if profile_dialog.exec() and profile_dialog.selected_profile:
-        # Show main window
-        main_window = MainWindow(profile_dialog.selected_profile)
-        main_window.show()
+    # Main loop - allows returning to profile selection
+    while True:
+        # Show profile dialog
+        profile_dialog = ProfileDialog()
         
-        return app.exec()
+        if profile_dialog.exec() and profile_dialog.selected_profile:
+            # Show main window
+            main_window = MainWindow(profile_dialog.selected_profile)
+            
+            # Track if user wants to switch profiles
+            switch_requested = [False]  # Use list to modify in closure
+            
+            def on_switch_requested():
+                switch_requested[0] = True
+            
+            main_window.switch_profile_requested.connect(on_switch_requested)
+            main_window.show()
+            
+            app.exec()
+            
+            # If switch was requested, loop back to profile dialog
+            if switch_requested[0]:
+                continue
+        
+        # Exit the loop
+        break
     
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
+

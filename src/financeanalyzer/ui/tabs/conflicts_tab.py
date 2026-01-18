@@ -58,9 +58,9 @@ class ConflictsTab(QWidget):
         
         # Table
         self.table = QTableWidget()
-        self.table.setColumnCount(6)
+        self.table.setColumnCount(7)
         self.table.setHorizontalHeaderLabels([
-            "Date", "Amount", "Description", "Matching Rules", "Source", "Assign Category"
+            "Date", "Amount", "Sender/Receiver", "Description", "Matching Rules", "Source", "Assign Category"
         ])
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -69,10 +69,11 @@ class ConflictsTab(QWidget):
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.Stretch)
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(6, QHeaderView.ResizeToContents)
         
         layout.addWidget(self.table)
         
@@ -119,9 +120,13 @@ class ConflictsTab(QWidget):
                 amount_item.setForeground(QColor("#f85149"))
             self.table.setItem(row, 1, amount_item)
             
+            # Sender/Receiver
+            sender_receiver = getattr(entry, 'sender_receiver', None) or ""
+            self.table.setItem(row, 2, QTableWidgetItem(sender_receiver))
+            
             # Description
             desc_item = QTableWidgetItem(entry.description)
-            self.table.setItem(row, 2, desc_item)
+            self.table.setItem(row, 3, desc_item)
             
             # Matching rules
             matching_rules = engine.find_matching_rules(entry)
@@ -132,11 +137,11 @@ class ConflictsTab(QWidget):
             
             rules_item = QTableWidgetItem("\n".join(rule_texts))
             rules_item.setForeground(QColor("#f0883e"))
-            self.table.setItem(row, 3, rules_item)
+            self.table.setItem(row, 4, rules_item)
             
             # Source
             source_item = QTableWidgetItem(entry.source)
-            self.table.setItem(row, 4, source_item)
+            self.table.setItem(row, 5, source_item)
             
             # Assign combo
             action_combo = QComboBox()
@@ -149,7 +154,7 @@ class ConflictsTab(QWidget):
                 lambda idx, e_id=entry.id, combo=action_combo: 
                 self._assign_category(e_id, combo.currentData())
             )
-            self.table.setCellWidget(row, 5, action_combo)
+            self.table.setCellWidget(row, 6, action_combo)
         
         engine.close()
         entry_service.close()

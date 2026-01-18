@@ -29,12 +29,15 @@ from .dialogs.import_dialog import ImportDialog
 from .dialogs.category_dialog import CategoryManagerDialog
 from .dialogs.rule_dialog import RuleManagerDialog
 from .dialogs.entry_dialog import EntryDialog
+from .dialogs.export_dialog import ExportDialog
+from .dialogs.clone_dialog import CloneProfileDialog
 
 
 class MainWindow(QMainWindow):
     """Main application window."""
     
     profile_changed = Signal(int)  # Emitted when profile changes
+    switch_profile_requested = Signal()  # Emitted to return to profile selection
     
     def __init__(self, profile: Profile):
         super().__init__()
@@ -107,6 +110,12 @@ class MainWindow(QMainWindow):
         
         file_menu.addSeparator()
         
+        switch_profile_action = QAction("🔄 Switch Profile...", self)
+        switch_profile_action.triggered.connect(self._switch_profile)
+        file_menu.addAction(switch_profile_action)
+        
+        file_menu.addSeparator()
+        
         exit_action = QAction("Exit", self)
         exit_action.setShortcut("Ctrl+Q")
         exit_action.triggered.connect(self.close)
@@ -122,6 +131,12 @@ class MainWindow(QMainWindow):
         rules_action = QAction("📏 Manage Rules...", self)
         rules_action.triggered.connect(self._manage_rules)
         edit_menu.addAction(rules_action)
+        
+        edit_menu.addSeparator()
+        
+        clone_profile_action = QAction("📋 Clone Profile...", self)
+        clone_profile_action.triggered.connect(self._clone_profile)
+        edit_menu.addAction(clone_profile_action)
         
         edit_menu.addSeparator()
         
@@ -243,34 +258,9 @@ class MainWindow(QMainWindow):
             self._refresh_all()
     
     def _export_excel(self):
-        """Export to Excel."""
-        from ..export.excel_export import ExcelExporter
-        
-        file_path, _ = QFileDialog.getSaveFileName(
-            self,
-            "Export to Excel",
-            "",
-            "Excel Files (*.xlsx)"
-        )
-        
-        if file_path:
-            if not file_path.endswith('.xlsx'):
-                file_path += '.xlsx'
-            
-            try:
-                exporter = ExcelExporter(self.current_profile.id)
-                exporter.export(file_path)
-                QMessageBox.information(
-                    self,
-                    "Export Complete",
-                    f"Data exported successfully to:\n{file_path}"
-                )
-            except Exception as e:
-                QMessageBox.critical(
-                    self,
-                    "Export Error",
-                    f"Failed to export data:\n{str(e)}"
-                )
+        """Open export dialog."""
+        dialog = ExportDialog(self.current_profile.id, self)
+        dialog.exec()
     
     def _manage_categories(self):
         """Open category manager dialog."""
@@ -317,6 +307,29 @@ class MainWindow(QMainWindow):
         if hasattr(current_tab, 'refresh'):
             current_tab.refresh()
         self._update_status_bar()
+    
+    def _clone_profile(self):
+        """Open clone profile dialog."""
+        dialog = CloneProfileDialog(
+            self.current_profile.id,
+            self.current_profile.name,
+            self
+        )
+        if dialog.exec():
+            # Refresh profile dropdown
+            self._load_profiles()
+    
+    def _switch_profile(self):
+        """Request to switch to profile selection."""
+        reply = QMessageBox.question(
+            self,
+            "Switch Profile",
+            "Return to profile selection?\n\nYour current work is automatically saved.",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            self.switch_profile_requested.emit()
+            self.close()
     
     def closeEvent(self, event):
         """Handle window close."""

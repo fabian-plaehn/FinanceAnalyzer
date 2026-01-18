@@ -33,6 +33,7 @@ class RuleService:
         target_category_id: int,
         rule_type: str,
         pattern: str,
+        match_field: str = "description",
         enabled: bool = True
     ) -> Rule:
         """Create a new categorization rule.
@@ -41,6 +42,7 @@ class RuleService:
             target_category_id: The category ID to assign when rule matches.
             rule_type: Type of rule ("contains" or "regex").
             pattern: The pattern to match against.
+            match_field: Field to match against ("description", "sender_receiver", or "any").
             enabled: Whether the rule is enabled.
         
         Returns:
@@ -52,6 +54,7 @@ class RuleService:
             target_category_id=target_category_id,
             rule_type=rule_type,
             pattern=pattern,
+            match_field=match_field,
             enabled=enabled
         )
         session.add(rule)
