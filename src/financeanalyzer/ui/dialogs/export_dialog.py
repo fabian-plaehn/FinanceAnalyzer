@@ -18,8 +18,9 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QWidget,
     QMessageBox,
+    QDateEdit,
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QDate
 
 from ...services.category_service import CategoryService
 
@@ -120,6 +121,33 @@ class ExportDialog(QDialog):
         file_layout.addLayout(path_layout)
         layout.addWidget(file_group)
         
+        # Date Range
+        date_group = QGroupBox("Date Range")
+        date_layout = QVBoxLayout(date_group)
+        
+        self.all_dates_checkbox = QCheckBox("Export all dates")
+        self.all_dates_checkbox.setChecked(True)
+        self.all_dates_checkbox.stateChanged.connect(self._toggle_date_range)
+        date_layout.addWidget(self.all_dates_checkbox)
+        
+        range_layout = QHBoxLayout()
+        range_layout.addWidget(QLabel("From:"))
+        self.start_date_edit = QDateEdit()
+        self.start_date_edit.setCalendarPopup(True)
+        self.start_date_edit.setDate(QDate(date.today().year, 1, 1))
+        self.start_date_edit.setEnabled(False)
+        range_layout.addWidget(self.start_date_edit)
+        
+        range_layout.addWidget(QLabel("To:"))
+        self.end_date_edit = QDateEdit()
+        self.end_date_edit.setCalendarPopup(True)
+        self.end_date_edit.setDate(QDate.currentDate())
+        self.end_date_edit.setEnabled(False)
+        range_layout.addWidget(self.end_date_edit)
+        
+        date_layout.addLayout(range_layout)
+        layout.addWidget(date_group)
+        
         # Sheet Name
         sheet_group = QGroupBox("Sheet Name")
         sheet_layout = QHBoxLayout(sheet_group)
@@ -178,6 +206,12 @@ class ExportDialog(QDialog):
         for cb, _ in self.category_checkboxes:
             cb.setChecked(False)
     
+    def _toggle_date_range(self, state):
+        """Enable/disable date range inputs."""
+        enabled = state != Qt.Checked
+        self.start_date_edit.setEnabled(enabled)
+        self.end_date_edit.setEnabled(enabled)
+    
     def _browse_file(self):
         """Open file browser."""
         if self.new_file_radio.isChecked():
@@ -226,6 +260,13 @@ class ExportDialog(QDialog):
         include_uncategorized = None in selected_categories
         category_ids = [cid for cid in selected_categories if cid is not None]
         
+        # Get date range
+        start_date = None
+        end_date = None
+        if not self.all_dates_checkbox.isChecked():
+            start_date = self.start_date_edit.date().toPython()
+            end_date = self.end_date_edit.date().toPython()
+        
         # Do export
         try:
             from ...export.excel_export import ExcelExporter
@@ -237,7 +278,9 @@ class ExportDialog(QDialog):
                 category_ids=category_ids if category_ids else None,
                 include_uncategorized=include_uncategorized,
                 sheet_name=sheet_name,
-                append_to_existing=append_mode
+                append_to_existing=append_mode,
+                start_date=start_date,
+                end_date=end_date
             )
             
             QMessageBox.information(

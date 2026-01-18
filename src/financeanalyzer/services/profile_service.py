@@ -110,6 +110,73 @@ class ProfileService:
             return True
         return False
     
+    def clone_profile(self, source_profile_id: int, new_name: str) -> Optional[Profile]:
+        """Clone a profile, copying categories, rules, and CSV configs.
+        
+        Args:
+            source_profile_id: The source profile ID to clone from.
+            new_name: Name for the new cloned profile.
+        
+        Returns:
+            The new Profile object, or None if source not found.
+        """
+        from ..database.models import Category, Rule, CSVConfiguration
+        
+        session = self._get_session()
+        source = session.get(Profile, source_profile_id)
+        if not source:
+            return None
+        
+        # Create new profile
+        new_profile = Profile(name=new_name)
+        session.add(new_profile)
+        session.flush()  # Get the new ID
+        
+        # Clone categories and build ID mapping
+        category_map = {}  # old_id -> new_id
+        for old_cat in session.query(Category).filter(Category.profile_id == source_profile_id).all():
+            new_cat = Category(
+                profile_id=new_profile.id,
+                name=old_cat.name
+            )
+            session.add(new_cat)
+            session.flush()
+            category_map[old_cat.id] = new_cat.id
+        
+        # Clone rules with updated category references
+        for old_rule in session.query(Rule).filter(Rule.profile_id == source_profile_id).all():
+            new_rule = Rule(
+                profile_id=new_profile.id,
+                pattern=old_rule.pattern,
+                is_regex=old_rule.is_regex,
+                target_category_id=category_map.get(old_rule.target_category_id),
+                priority=old_rule.priority,
+                match_field=getattr(old_rule, 'match_field', 'description')
+            )
+            session.add(new_rule)
+        
+        # Clone CSV configs
+        for old_config in session.query(CSVConfiguration).filter(
+            CSVConfiguration.profile_id == source_profile_id
+        ).all():
+            new_config = CSVConfiguration(
+                profile_id=new_profile.id,
+                name=old_config.name,
+                date_column=old_config.date_column,
+                amount_column=old_config.amount_column,
+                description_column=old_config.description_column,
+                date_format=old_config.date_format,
+                delimiter=old_config.delimiter,
+                skip_rows=old_config.skip_rows,
+                encoding=old_config.encoding,
+                sender_receiver_column=getattr(old_config, 'sender_receiver_column', None)
+            )
+            session.add(new_config)
+        
+        session.commit()
+        session.refresh(new_profile)
+        return new_profile
+    
     def close(self) -> None:
         """Close the session if we own it."""
         if self._owns_session and self._session is not None:
