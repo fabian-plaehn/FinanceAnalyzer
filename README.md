@@ -78,7 +78,3 @@ The application supports any CSV format. When importing for the first time:
 - **Encoding**: UTF-8, Latin-1, CP1252, ISO-8859-1
 - **Date formats**: DD.MM.YYYY, YYYY-MM-DD, MM/DD/YYYY, etc.
 - **Number formats**: German (1.234,56) or US (1,234.56)
-
-## License
-
-MIT
