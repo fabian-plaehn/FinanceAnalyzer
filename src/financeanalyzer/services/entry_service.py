@@ -37,7 +37,8 @@ class EntryService:
         entry_date: date,
         amount: Decimal,
         description: str,
-        source: str
+        source: str,
+        sender_receiver: str | None = None
     ) -> str:
         """Generate a unique hash for duplicate detection.
         
@@ -46,11 +47,13 @@ class EntryService:
             amount: The transaction amount.
             description: The transaction description.
             source: The transaction source.
+            sender_receiver: The sender/receiver of the transaction.
         
         Returns:
             A SHA-256 hash string.
         """
-        content = f"{entry_date.isoformat()}|{amount}|{description}|{source}"
+        sender_receiver_str = sender_receiver or ""
+        content = f"{entry_date.isoformat()}|{amount}|{description}|{source}|{sender_receiver_str}"
         return hashlib.sha256(content.encode()).hexdigest()
 
     def create_entry(

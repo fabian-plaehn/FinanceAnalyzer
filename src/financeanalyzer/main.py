@@ -482,6 +482,28 @@ def main():
             border-color: #238636;
         }
         
+        /* === RADIO BUTTONS === */
+        QRadioButton {
+            spacing: 8px;
+            color: #c9d1d9;
+        }
+        QRadioButton::indicator {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #30363d;
+            border-radius: 10px;
+            background: #21262d;
+        }
+        QRadioButton::indicator:hover {
+            border-color: #58a6ff;
+        }
+        QRadioButton::indicator:checked {
+            border-color: #238636;
+            background: qradialgradient(cx:0.5, cy:0.5, radius:0.4,
+                fx:0.5, fy:0.5,
+                stop:0 #3fb950, stop:0.6 #3fb950, stop:0.7 #21262d, stop:1 #21262d);
+        }
+        
         /* === SPINBOX === */
         QSpinBox, QDoubleSpinBox {
             padding: 8px 12px;

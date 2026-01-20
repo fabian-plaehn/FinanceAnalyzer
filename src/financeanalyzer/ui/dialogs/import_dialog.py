@@ -480,7 +480,7 @@ class ImportPage(QWizardPage):
         for parsed in entries:
             # Generate hash for duplicate detection
             import_hash = EntryService.generate_import_hash(
-                parsed.entry_date, parsed.amount, parsed.description, source
+                parsed.entry_date, parsed.amount, parsed.description, source, parsed.sender_receiver
             )
             
             if entry_service.entry_exists(import_hash):
